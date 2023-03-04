@@ -1,38 +1,42 @@
-from the_laundromat.ml_logic.params import (COLUMN_NAMES_RAW,
-                                            DTYPES_RAW_OPTIMIZED,
-                                            DTYPES_RAW_OPTIMIZED_HEADLESS,
-                                            DTYPES_PROCESSED_OPTIMIZED
-                                            )
 
 import os
 import pandas as pd
+from sklearn.model_selection import train_test_split
+
+
+
+def read_data(df: pd.DataFrame) -> pd.DataFrame:
+    '''
+    docstring
+    '''
+
+    df = df.rename(columns={'oldbalanceOrg':'oldBalanceOrig', 'newbalanceOrig':'newBalanceOrig', \
+                        'oldbalanceDest':'oldBalanceDest', 'newbalanceDest':'newBalanceDest'})
+    df['errorBalanceOrig']=df['newBalanceOrig'] + df['amount'] - df['oldBalanceOrig']
+    df['errorBalanceDest']=df['newBalanceDest'] + df['amount'] - df['oldBalanceDest']
+    return df
 
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     """
-    clean raw data by removing buggy or irrelevant transactions
-    or columns for the training set
+    remove useless columns
     """
 
     # remove useless/redundant columns --> ASK CLAUDIA AND TAJ
-    df = df.drop(columns=['isFlaggedFraud', 'nameOrigin', 'nameDest'])
-
-    # # remove buggy transactions
-    # df = df.drop_duplicates()  # TODO: handle in the data source if the data is consumed by chunks
-    # df = df.dropna(how='any', axis=0)
-    # df = df[(df.dropoff_latitude != 0) | (df.dropoff_longitude != 0) |
-    #         (df.pickup_latitude != 0) | (df.pickup_longitude != 0)]
-    # df = df[df.passenger_count > 0]
-    # df = df[df.fare_amount > 0]
-
-    # # remove irrelevant/non-representative transactions (rows) for a training set
-    # df = df[df.fare_amount < 400]
-    # df = df[df.passenger_count < 8]
-    # df = df[df["pickup_latitude"].between(left=40.5, right=40.9)]
-    # df = df[df["dropoff_latitude"].between(left=40.5, right=40.9)]
-    # df = df[df["pickup_longitude"].between(left=-74.3, right=-73.7)]
-    # df = df[df["dropoff_longitude"].between(left=-74.3, right=-73.7)]
-
-    print("\n✅ data cleaned")
+    df = df.drop(columns=['isFlaggedFraud'])
 
     return df
+
+def separate_feature_target (df: pd.DataFrame):
+
+    # Separate the features and target variable
+    X = df.drop('isFraud', axis=1)
+    y = df['isFraud']
+
+    return X, y
+
+def split_data (X:pd.DataFrame, y:pd.Series):
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    return X_train, X_test, y_train, y_test
