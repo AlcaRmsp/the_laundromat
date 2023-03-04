@@ -1,9 +1,9 @@
 import os
 import pandas as pd
-from sklearn.preprocessing import OrdinalEncoder
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
 from imblearn.over_sampling import ADASYN
+from sklearn.preprocessing import OneHotEncoder
 from ml_logic.data import split_data, separate_feature_target
 
 
@@ -11,17 +11,11 @@ def transaction_type_encoder(df: pd.DataFrame) -> pd.DataFrame:
     '''
     function encoding the kind of transactions 'CASH_IN', 'CASH_OUT', 'DEBIT', 'PAYMENT', 'TRANSFER'
     '''
+    # Instantiate the OneHotEncoder
+    ohe_binary = OneHotEncoder(sparse = False, drop="if_binary")
 
-
-    # Instantiate the Ordinal Encoder
-    ordinal_encoder = OrdinalEncoder()
-
-    # Fit it
-    ordinal_encoder.fit(df[["type"]])
-
-
-    # Transforming categories into ordered numbers
-    df["type"] = ordinal_encoder.transform(df[["type"]])
+    # Fit encoder
+    ohe_binary.fit(df[['type']])
 
     return df
 
@@ -51,4 +45,3 @@ def rebalancing_ADASYN (X_train, y_train):
 
 
     return X_resampled_ADASYN, y_resampled_ADASYN
-
