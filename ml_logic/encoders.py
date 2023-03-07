@@ -17,6 +17,13 @@ def transaction_type_encoder(df: pd.DataFrame) -> pd.DataFrame:
     # Fit encoder
     ohe_binary.fit(df[['type']])
 
+    # Transform the current "Street" column
+    df[ohe_binary.get_feature_names_out()] = ohe_binary.transform(df[['type']])
+
+    # Drop the column "Street" which has been encoded
+    df.drop(columns = ["type"], inplace = True)
+
+
     return df
 
 
