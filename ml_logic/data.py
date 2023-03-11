@@ -2,6 +2,7 @@
 import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import SMOTE
 
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
@@ -14,6 +15,15 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.rename(columns={'oldbalanceOrg':'oldBalanceOrig', 'newbalanceOrig':'newBalanceOrig', \
                         'oldbalanceDest':'oldBalanceDest', 'newbalanceDest':'newBalanceDest'})
+    df['errorBalanceOrig']=df['newBalanceOrig'] + df['amount'] - df['oldBalanceOrig']
+    df['errorBalanceDest']=df['newBalanceDest'] + df['amount'] - df['oldBalanceDest']
+
+    return df
+
+def create_new_features (df:pd.DataFrame):
+
+    """Create 'balance error in originator account' feature and 'balance error in destination account feature """
+
     df['errorBalanceOrig']=df['newBalanceOrig'] + df['amount'] - df['oldBalanceOrig']
     df['errorBalanceDest']=df['newBalanceDest'] + df['amount'] - df['oldBalanceDest']
 
@@ -36,11 +46,19 @@ def split_data (X:pd.DataFrame, y:pd.Series):
 
     return X_train, X_test, y_train, y_test
 
-def create_new_features (df:pd.DataFrame):
+def rebalancing_SMOTE (X_train, y_train):
 
-    """Create 'balance error in originator account' feature and 'balance error in destination account feature """
+    X_resampled_SMOTE, y_resampled_SMOTE = SMOTE().fit_resample(X_train, y_train)
+    X_resampled_SMOTE['isFraud'] = y_resampled_SMOTE
+    df_resampled_SMOTE = X_resampled_SMOTE
 
-    df['errorBalanceOrig']=df['newBalanceOrig'] + df['amount'] - df['oldBalanceOrig']
-    df['errorBalanceDest']=df['newBalanceDest'] + df['amount'] - df['oldBalanceDest']
+    return df_resampled_SMOTE
 
-    return df
+
+def resample(df_resampled_SMOTE, sample_size: int):
+
+    """Takes a sample of the dataset. Sample size can be chosen by user"""
+    fraud = df_resampled_SMOTE[df_resampled_SMOTE.isFraud == 1].sample(sample_size)
+    notfraud = df_resampled_SMOTE[df_resampled_SMOTE.isFraud == 0].sample(sample_size)
+    data_new = pd.concat([fraud, notfraud], axis=0)
+    return data_new
