@@ -2,194 +2,90 @@ import numpy as np
 import pandas as pd
 import os
 
-from tests.test_base import write_result
+# import functions from other files
 
-from ml_logic.data import clean_data
-from ml_logic.data import separate_feature_target
-from ml_logic.data import split_data
-from ml_logic import params
+from ml_logic.data import clean_data, create_new_features, separate_feature_target, split_data, rebalancing_SMOTE, resample
+from ml_logic.params import DATA_SOURCE
+from ml_logic.encoders import transaction_type_encoder, names_encoder
 
-# from taxifare.ml_logic.model import initialize_model, compile_model, train_model
-# from taxifare.ml_logic.preprocessor import preprocess_features
-# from taxifare.ml_logic.registry import save_model, load_model
+data_raw_path = os.path.join(DATA_SOURCE)
 
-# from taxifare.ml_logic.params import (
-#     CHUNK_SIZE,
-#     DTYPES_RAW_OPTIMIZED_HEADLESS,
-#     DTYPES_RAW_OPTIMIZED,
-#     DTYPES_PROCESSED_OPTIMIZED,
-#     COLUMN_NAMES_RAW,
-#     DATASET_SIZE,
-#     VALIDATION_DATASET_SIZE,
-#     LOCAL_DATA_PATH
-# )
-
-
-def preprocess_and_train(df):
+def preprocess(data_raw_path):
     """
-    Load historical data in memory, clean and preprocess it, train a Keras model on it,
-    save the model, and finally compute & save a performance metric
-    on a validation set holdout at the `model.fit()` level
-    """
-
-    print("\n⭐️ Use case: preprocess and train basic")
-
-
+    Load synthetic dataset in memory, clean and preprocess it"""
 
     # Retrieve raw data
-    data_raw_path = os.path.join(LOCAL_DATA_PATH, "raw", f"train_{DATASET_SIZE}.csv")
-    data = pd.read_csv(data_raw_path, dtype=DTYPES_RAW_OPTIMIZED)
+    df = pd.read_csv(data_raw_path)
 
     # Clean data using ml_logic.data.clean_data
-    # $CODE_BEGIN
-    data_cleaned = clean_data(df)
-    # $CODE_END
+    clean_df = clean_data(df)
+    df_new_features = create_new_features(clean_df)
 
-    # Create X, y using ml_logic.data.separate_feature_target
-    # $CODE_BEGIN
-    create_X_y = separate_feature_target (df)
-    # $CODE_END
+     #Encode transaction type and account names
+    df_transaction_encoded= transaction_type_encoder (df_new_features)
+    df_names_encoded = names_encoder (df_transaction_encoded)
 
-    #Split dataset 
+    #Split dataset into features and target
+    X, y = separate_feature_target(df_names_encoded)
 
-"""START AGAIN HERE AFTER LUNCH"""
+    #Spliting the dataset into train and test
+    X_train, X_test, y_train, y_test = split_data(X, y)
 
-    # Preprocess X using `preprocessor.py`
-    # $CODE_BEGIN
-    X_processed = preprocess_features(X)
-    # $CODE_END
+    #Oversampling the minority class with SMOTE
+    df_resampled_SMOTE = rebalancing_SMOTE(X_train, y_train)
 
-    # Train model on X_processed and y, using `model.py`
-    model = None
-    learning_rate = 0.001
-    batch_size = 256
-    patience = 2
+    #Taking a sample of the balanced dataset to train our models
+    df_processed = resample(df_resampled_SMOTE)
 
-    # $CODE_BEGIN
-    model = initialize_model(X_processed)
-    model = compile_model(model, learning_rate)
-    model, history = train_model(model, X_processed, y, batch_size=batch_size, patience=patience, validation_split=0.3)
-    # $CODE_END
+    return df_processed
 
-    # Compute the validation metric (min val mae of the holdout set)
-    metrics = dict(mae=np.min(history.history['val_mae']))
+    #Create new X_processed and y_processed
 
-    # Save trained model
-    params = dict(
-        learning_rate=learning_rate,
-        batch_size=batch_size,
-        patience=patience
-    )
+def new_x_train_y_train(data_new):
+    X_sampled_train = data_new.drop('isFraud', axis = 1)
+    y_sampled_train = data_new['isFraud']
 
-    save_model(model, params=params, metrics=metrics)
+    return X_sampled_train, y_sampled_train
+
+
+def train (df, model_type)
+ call funtion from model.py
+
+ return model, confusion matrix
+
+    # # $CODE_BEGIN
+
+
+    # # Train model on X_processed and y, using `model.py`
+    # model = None
+    # # learning_rate = 0.001
+    # # batch_size = 256
+    # # patience = 2
+
+    # # $CODE_BEGIN
+    # model = initialize_model(X_processed)
+    # model = compile_model(model, learning_rate)
+    # model, history = train_model(model, X_processed, y, batch_size=batch_size, patience=patience, validation_split=0.3)
+    # # $CODE_END
+
+    # # Compute the validation metric (min val mae of the holdout set)
+    # metrics = dict(mae=np.min(history.history['val_mae']))
+
+    # # Save trained model
+    # params = dict(
+    #     learning_rate=learning_rate,
+    #     batch_size=batch_size,
+    #     patience=patience
+    # )
+
+    # save_model(model, params=params, metrics=metrics)
 
     # 🧪 Write outputs so that they can be tested by make test_train_at_scale (do not remove)
     write_result(name="test_preprocess_and_train", subdir="train_at_scale", metrics=metrics)
 
     print("✅ preprocess_and_train() done")
 
-# $ERASE_BEGIN
-def preprocess(source_type='train'):
-    """
-    Preprocess the dataset iteratively by loading data in chunks fitting in memory,
-    processing each chunk, appending each of them to a final, preprocessed dataset,
-    and saving that dataset in CSV format.
 
-    Parameter:
-    - source_type could be 'train' or 'val'
-    """
-
-    print("\n⭐️ Use case: preprocess")
-
-    # Local saving paths given to you (do not overwrite these data_path variables)
-    source_name = f"{source_type}_{DATASET_SIZE}.csv"
-    destination_name = f"{source_type}_processed_{DATASET_SIZE}.csv"
-
-    data_raw_path = os.path.abspath(os.path.join(LOCAL_DATA_PATH, "raw", source_name))
-    data_processed_path = os.path.abspath(os.path.join(LOCAL_DATA_PATH, "processed", destination_name))
-
-    # Iterate over the dataset, in chunks
-    chunk_id = 0
-
-    # Let's loop until we reach the end of the dataset, then `break` out
-    while (True):
-        print(f"Processing chunk n°{chunk_id}...")
-
-        try:
-            # Load the chunk numbered `chunk_id` of size `CHUNK_SIZE` into memory
-
-            # 🎯 Hint: check out pd.read_csv(skiprows=..., nrows=..., headers=...)
-            # We advise you to always load data with `header=None`, and add back column names using COLUMN_NAMES_RAW
-
-            # $CODE_BEGIN
-            data_raw_chunk = pd.read_csv(
-                data_raw_path,
-                header=None,
-                skiprows=(chunk_id * CHUNK_SIZE) + 1, # first chunk has headers, we don't want them
-                nrows=CHUNK_SIZE,
-                dtype=DTYPES_RAW_OPTIMIZED_HEADLESS,
-            )
-
-            assert dict(data_raw_chunk.dtypes) == DTYPES_RAW_OPTIMIZED_HEADLESS # read_csv(dtypes=...) silently fails to convert dtypes if column names don't match the dictionary key provided
-
-            data_raw_chunk.columns = COLUMN_NAMES_RAW
-            # $CODE_END
-
-        except pd.errors.EmptyDataError:
-            # 🤔 Question: what should you do when you reach the end of the CSV?
-            # $CODE_BEGIN
-            data_raw_chunk = None  # end of data
-            # $CODE_END
-
-        # $DEL_END
-        # Break out of while loop if data is `None`
-        if data_raw_chunk is None:
-            break
-        # $DEL_END
-
-        # Clean chunk
-        # $CODE_BEGIN
-        data_clean_chunk = clean_data(data_raw_chunk)
-
-        # Break out of while loop if cleaning removed all rows
-        if len(data_clean_chunk) == 0:
-            break
-        # $CODE_END
-
-        # Create X_chunk, y_chunk
-        # $CODE_BEGIN
-        X_chunk = data_clean_chunk.drop("fare_amount", axis=1)
-        y_chunk = data_clean_chunk[["fare_amount"]]
-        # $CODE_END
-
-        # Create X_processed_chunk and concatenate (X_processed_chunk, y_chunk) into data_processed_chunk
-        # $CODE_BEGIN
-        X_processed_chunk = preprocess_features(X_chunk)
-
-        data_processed_chunk = pd.DataFrame(
-            np.concatenate((X_processed_chunk, y_chunk), axis=1))
-        # $CODE_END
-
-        # Save and append the chunk of the preprocessed dataset to a local CSV
-        # Keep headers on the first chunk
-        # By convention, we'll always save CSVs with headers in this challenge
-        # 🎯 Hint: check out pd.to_csv(mode=...)
-        # $CODE_BEGIN
-        data_processed_chunk.to_csv(
-            data_processed_path,
-            mode="w" if chunk_id==0 else "a",
-            header=chunk_id == 0, # Header only for first chunk
-            index=False
-        )
-        # $CODE_END
-
-        chunk_id += 1
-
-    # 🧪 Write outputs so that they can be tested by make test_train_at_scale (do not remove)
-    data_processed = pd.read_csv(data_processed_path, header=None, skiprows=1, dtype=DTYPES_PROCESSED_OPTIMIZED).to_numpy()
-    write_result(name="test_preprocess", subdir="train_at_scale", data_processed_head=data_processed[0:10])
-
-    print("✅ data_processed saved entirely")
 
 
 def train():
