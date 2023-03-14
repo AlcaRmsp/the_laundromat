@@ -114,25 +114,3 @@ def modellingXGBC(X_sampled_train, y_sampled_train, X_test, y_test):
 
     return model_XGBC, recall_XGBC, accuracy_XGBC
 
-def modellingSVM(X_sampled_train, y_sampled_train, X_test, y_test):
-    #state the model
-    model_SVM = svm.SVC(kernel='linear')
-
-    #instatiate the model
-    model_SVM.fit(X_sampled_train, y_sampled_train)
-
-    #Predict the y
-    y_pred_SVM = model_SVM.predict(X_test)
-
-    #Scores
-    recall_SVM = recall_score(y_test, y_pred_SVM)
-    accuracy_SVM = accuracy_score(y_test, y_pred_SVM)
-
-    #confusion matrix
-    cm_SVM = confusion_matrix(y_test, y_pred_SVM)
-    confusion_matrix_SVM = pd.DataFrame(data=cm_SVM, columns=['Actual Positive:1', 'Actual Negative:0'],
-                                 index=['Predict Positive:1', 'Predict Negative:0'])
-    fig, ax = plt.subplots(figsize=(5,5))
-    sns.heatmap(confusion_matrix_SVM, annot=True, fmt='d', cmap = 'PuBu', ax = ax)
-
-    return model_SVM, recall_SVM, accuracy_SVM
