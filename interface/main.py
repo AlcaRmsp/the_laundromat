@@ -7,6 +7,7 @@ import os
 from ml_logic.data import clean_data, create_new_features, separate_feature_target, split_data, rebalancing_SMOTE, resample
 from ml_logic.params import DATA_SOURCE
 from ml_logic.encoders import transaction_type_encoder, names_encoder
+from ml_logic.model import modellingLR, modellingDTC, modellingRFC, modellingXGBC
 
 data_raw_path = os.path.join(DATA_SOURCE)
 
@@ -48,28 +49,22 @@ def new_x_train_y_train(data_new):
     return X_sampled_train, y_sampled_train
 
 
-def train (df, model_type)
+def train (X_sampled_train, y_sampled_train, X_test, y_test, model):
+
+    if model is 'Logistic Regression':
+        model = modellingLR(X_sampled_train, y_sampled_train, X_test, y_test)
+
+    if model is 'Decision Tree Classifier':
+        model = modellingDTC (X_sampled_train, y_sampled_train, X_test, y_test)
+
+    if model is "Random Forest Classifier":
+        model = modellingRFC (X_sampled_train, y_sampled_train, X_test, y_test)
+
  call funtion from model.py
 
  return model, confusion matrix
 
-    # # $CODE_BEGIN
 
-
-    # # Train model on X_processed and y, using `model.py`
-    # model = None
-    # # learning_rate = 0.001
-    # # batch_size = 256
-    # # patience = 2
-
-    # # $CODE_BEGIN
-    # model = initialize_model(X_processed)
-    # model = compile_model(model, learning_rate)
-    # model, history = train_model(model, X_processed, y, batch_size=batch_size, patience=patience, validation_split=0.3)
-    # # $CODE_END
-
-    # # Compute the validation metric (min val mae of the holdout set)
-    # metrics = dict(mae=np.min(history.history['val_mae']))
 
     # # Save trained model
     # params = dict(
@@ -80,148 +75,148 @@ def train (df, model_type)
 
     # save_model(model, params=params, metrics=metrics)
 
-    # 🧪 Write outputs so that they can be tested by make test_train_at_scale (do not remove)
-    write_result(name="test_preprocess_and_train", subdir="train_at_scale", metrics=metrics)
+    # # 🧪 Write outputs so that they can be tested by make test_train_at_scale (do not remove)
+    # write_result(name="test_preprocess_and_train", subdir="train_at_scale", metrics=metrics)
 
-    print("✅ preprocess_and_train() done")
-
-
+    # print("✅ preprocess_and_train() done")
 
 
-def train():
-    """
-    Train on the full (already preprocessed) dataset, by loading it
-    chunk-by-chunk, and updating the weight of the model for each chunk.
-    Save model, compute validation metrics on a holdout validation set that is
-    common to all chunks.
-    """
-    print("\n ⭐️ Use case: train")
 
-    # Validation set: load a validation set common to all chunks and create X_val, y_val
-    data_val_processed_path = os.path.abspath(os.path.join(
-        LOCAL_DATA_PATH, "processed", f"val_processed_{VALIDATION_DATASET_SIZE}.csv"
-    ))
 
-    data_val_processed = pd.read_csv(
-        data_val_processed_path,
-        skiprows= 1, # skip header
-        header=None,
-        dtype=DTYPES_PROCESSED_OPTIMIZED
-    ).to_numpy()
+# def train():
+#     """
+#     Train on the full (already preprocessed) dataset, by loading it
+#     chunk-by-chunk, and updating the weight of the model for each chunk.
+#     Save model, compute validation metrics on a holdout validation set that is
+#     common to all chunks.
+#     """
+#     print("\n ⭐️ Use case: train")
 
-    X_val = data_val_processed[:, :-1]
-    y_val = data_val_processed[:, -1]
+#     # Validation set: load a validation set common to all chunks and create X_val, y_val
+#     data_val_processed_path = os.path.abspath(os.path.join(
+#         LOCAL_DATA_PATH, "processed", f"val_processed_{VALIDATION_DATASET_SIZE}.csv"
+#     ))
 
-    # Iterate over the full training dataset in chunks.
-    # Break out of the loop if you receive no more data to train upon!
-    model = None
-    chunk_id = 0
-    metrics_val_list = []  # store each metrics_val_chunk
+#     data_val_processed = pd.read_csv(
+#         data_val_processed_path,
+#         skiprows= 1, # skip header
+#         header=None,
+#         dtype=DTYPES_PROCESSED_OPTIMIZED
+#     ).to_numpy()
 
-    while (True):
-        print(f"Loading and training on preprocessed chunk n°{chunk_id}")
+#     X_val = data_val_processed[:, :-1]
+#     y_val = data_val_processed[:, -1]
 
-        # Load chunk of preprocess data and create (X_train_chunk, y_train_chunk)
-        path = os.path.abspath(os.path.join(
-            LOCAL_DATA_PATH, "processed", f"train_processed_{DATASET_SIZE}.csv"))
+#     # Iterate over the full training dataset in chunks.
+#     # Break out of the loop if you receive no more data to train upon!
+#     model = None
+#     chunk_id = 0
+#     metrics_val_list = []  # store each metrics_val_chunk
 
-        try:
-            data_processed_chunk = pd.read_csv(
-                path,
-                skiprows=(chunk_id * CHUNK_SIZE) + 1, # skip header
-                header=None,
-                nrows=CHUNK_SIZE,
-                dtype=DTYPES_PROCESSED_OPTIMIZED,
-            ).to_numpy()
+#     while (True):
+#         print(f"Loading and training on preprocessed chunk n°{chunk_id}")
 
-        except pd.errors.EmptyDataError:
-            data_processed_chunk = None  # end of data
+#         # Load chunk of preprocess data and create (X_train_chunk, y_train_chunk)
+#         path = os.path.abspath(os.path.join(
+#             LOCAL_DATA_PATH, "processed", f"train_processed_{DATASET_SIZE}.csv"))
 
-        # Break out of while loop if we have no data to train upon
-        if data_processed_chunk is None:
-            break
+#         try:
+#             data_processed_chunk = pd.read_csv(
+#                 path,
+#                 skiprows=(chunk_id * CHUNK_SIZE) + 1, # skip header
+#                 header=None,
+#                 nrows=CHUNK_SIZE,
+#                 dtype=DTYPES_PROCESSED_OPTIMIZED,
+#             ).to_numpy()
 
-        X_train_chunk = data_processed_chunk[:, :-1]
-        y_train_chunk = data_processed_chunk[:, -1]
+#         except pd.errors.EmptyDataError:
+#             data_processed_chunk = None  # end of data
 
-        learning_rate = 0.001
-        batch_size = 256
-        patience=2
+#         # Break out of while loop if we have no data to train upon
+#         if data_processed_chunk is None:
+#             break
 
-        # Train a model *incrementally*, and store the val MAE of each chunk in `metrics_val_list`
-        # $CODE_BEGIN
-        if model is None:
-            model = initialize_model(X_train_chunk)
+#         X_train_chunk = data_processed_chunk[:, :-1]
+#         y_train_chunk = data_processed_chunk[:, -1]
 
-        model = compile_model(model, learning_rate)
+#         learning_rate = 0.001
+#         batch_size = 256
+#         patience=2
 
-        model, history = train_model(
-            model,
-            X_train_chunk,
-            y_train_chunk,
-            batch_size=batch_size,
-            patience=patience,
-            validation_data=(X_val, y_val)
-        )
+#         # Train a model *incrementally*, and store the val MAE of each chunk in `metrics_val_list`
+#         # $CODE_BEGIN
+#         if model is None:
+#             model = initialize_model(X_train_chunk)
 
-        metrics_val_chunk = np.min(history.history['val_mae'])
-        metrics_val_list.append(metrics_val_chunk)
+#         model = compile_model(model, learning_rate)
 
-        print(metrics_val_chunk)
-        # $CODE_END
+#         model, history = train_model(
+#             model,
+#             X_train_chunk,
+#             y_train_chunk,
+#             batch_size=batch_size,
+#             patience=patience,
+#             validation_data=(X_val, y_val)
+#         )
 
-        chunk_id += 1
+#         metrics_val_chunk = np.min(history.history['val_mae'])
+#         metrics_val_list.append(metrics_val_chunk)
 
-    # Return the last value of the validation MAE
-    val_mae = metrics_val_list[-1]
+#         print(metrics_val_chunk)
+#         # $CODE_END
 
-    # Save model and training params
-    params = dict(
-        learning_rate=learning_rate,
-        batch_size=batch_size,
-        patience=patience,
-        incremental=True,
-        chunk_size=CHUNK_SIZE
-    )
+#         chunk_id += 1
 
-    print(f"\n✅ Trained with MAE: {round(val_mae, 2)}")
+#     # Return the last value of the validation MAE
+#     val_mae = metrics_val_list[-1]
 
-    save_model(model=model, params=params, metrics=dict(mae=val_mae))
+#     # Save model and training params
+#     params = dict(
+#         learning_rate=learning_rate,
+#         batch_size=batch_size,
+#         patience=patience,
+#         incremental=True,
+#         chunk_size=CHUNK_SIZE
+#     )
 
-    print("✅ Model trained and saved")
+#     print(f"\n✅ Trained with MAE: {round(val_mae, 2)}")
 
-# $ERASE_END
+#     save_model(model=model, params=params, metrics=dict(mae=val_mae))
 
-def pred(X_pred: pd.DataFrame = None) -> np.ndarray:
+#     print("✅ Model trained and saved")
 
-    if X_pred is None:
-        X_pred = pd.DataFrame(dict(
-            key=["2013-07-06 17:18:00"],  # useless but the pipeline requires it
-            pickup_datetime=["2013-07-06 17:18:00 UTC"],
-            pickup_longitude=[-73.950655],
-            pickup_latitude=[40.783282],
-            dropoff_longitude=[-73.984365],
-            dropoff_latitude=[40.769802],
-            passenger_count=[1]
-        ))
+# # $ERASE_END
 
-    model = load_model()
+# def pred(X_pred: pd.DataFrame = None) -> np.ndarray:
 
-    # Preprocess the new data
-    # $CODE_BEGIN
-    X_processed = preprocess_features(X_pred)
-    # $CODE_END
+#     if X_pred is None:
+#         X_pred = pd.DataFrame(dict(
+#             key=["2013-07-06 17:18:00"],  # useless but the pipeline requires it
+#             pickup_datetime=["2013-07-06 17:18:00 UTC"],
+#             pickup_longitude=[-73.950655],
+#             pickup_latitude=[40.783282],
+#             dropoff_longitude=[-73.984365],
+#             dropoff_latitude=[40.769802],
+#             passenger_count=[1]
+#         ))
 
-    # Make a prediction
-    # $CODE_BEGIN
-    y_pred = model.predict(X_processed)
-    # $CODE_END
+#     model = load_model()
 
-    # 🧪 Write outputs so that they can be tested by make test_train_at_scale (do not remove)
-    write_result(name="test_pred", subdir="train_at_scale", y_pred=y_pred)
-    print("✅ prediction done: ", y_pred, y_pred.shape)
+#     # Preprocess the new data
+#     # $CODE_BEGIN
+#     X_processed = preprocess_features(X_pred)
+#     # $CODE_END
 
-    return y_pred
+#     # Make a prediction
+#     # $CODE_BEGIN
+#     y_pred = model.predict(X_processed)
+#     # $CODE_END
+
+#     # 🧪 Write outputs so that they can be tested by make test_train_at_scale (do not remove)
+#     write_result(name="test_pred", subdir="train_at_scale", y_pred=y_pred)
+#     print("✅ prediction done: ", y_pred, y_pred.shape)
+
+#     return y_pred
 
 
 if __name__ == '__main__':

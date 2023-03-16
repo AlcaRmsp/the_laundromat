@@ -48,6 +48,8 @@ def split_data (X:pd.DataFrame, y:pd.Series):
 
 def rebalancing_SMOTE (X_train, y_train):
 
+    """Initial dataset is extremly unbalanced. This function oversamples the minority class ("fraud") to balance the dataset"""
+
     X_resampled_SMOTE, y_resampled_SMOTE = SMOTE().fit_resample(X_train, y_train)
     X_resampled_SMOTE['isFraud'] = y_resampled_SMOTE
     df_resampled_SMOTE = X_resampled_SMOTE
