@@ -1,15 +1,16 @@
 import numpy as np
 import pandas as pd
 import os
+import pickle
 
 # import functions from other files
 
 from ml_logic.data import clean_data, create_new_features, separate_feature_target, split_data, rebalancing_SMOTE, resample
 from ml_logic.params import DATA_SOURCE
 from ml_logic.encoders import transaction_type_encoder, names_encoder
-from ml_logic.model import modellingLR, modellingDTC, modellingRFC, modellingXGBC
+from ml_logic.model import modellingLR, modellingDTC, modellingRFC, modellingXGBC, predictingLR, predictingDTC, predictingRFC, predictingXGBC
 
-data_raw_path = os.path.join(DATA_SOURCE)
+data_raw_path = DATA_SOURCE
 
 def preprocess(data_raw_path):
     """
@@ -49,20 +50,61 @@ def new_x_train_y_train(data_new):
     return X_sampled_train, y_sampled_train
 
 
-def train (X_sampled_train, y_sampled_train, X_test, y_test, model):
+def train (X_sampled_train, y_sampled_train, model):
 
-    if model is 'Logistic Regression':
-        model = modellingLR(X_sampled_train, y_sampled_train, X_test, y_test)
+    """This function will NOT take any user input because  we want to have models pre-trained and then saved"""
 
-    if model is 'Decision Tree Classifier':
-        model = modellingDTC (X_sampled_train, y_sampled_train, X_test, y_test)
+    if model == 'Logistic Regression':
+        model = modellingLR(X_sampled_train, y_sampled_train)
 
-    if model is "Random Forest Classifier":
-        model = modellingRFC (X_sampled_train, y_sampled_train, X_test, y_test)
+    if model == 'Decision Tree Classifier':
+        model = modellingDTC (X_sampled_train, y_sampled_train)
 
- call funtion from model.py
+    if model == "Random Forest Classifier":
+        model = modellingRFC (X_sampled_train, y_sampled_train)
 
- return model, confusion matrix
+    if model == "XGB Classifier":
+        model = modellingXGBC (X_sampled_train, y_sampled_train)
+
+    return model
+
+
+def save_trained_model (model, model_name):
+    with open(f"{model_name}.pickle", "wb") as handle:
+        pickle.dump(model, handle)
+
+    return
+
+def pred (X_test, y_test, model):
+    """ This function will take user input and will use saved model from train function"""
+    model = pickle.loads("file to pickle file in")
+
+    if model == 'Logistic Regression':
+        prediction = predictingLR(X_test, y_test)
+
+    if model == 'Decision Tree Classifier':
+        prediction = predictingDTC (X_test, y_test)
+
+    if model == "Random Forest Classifier":
+        prediction = predictingRFC (X_test, y_test)
+
+    if model == "XGB Classifier":
+        prediction = predictingXGBC (X_test, y_test)
+
+    return prediction
+
+
+    # if model is 'Logistic Regression':
+    #     model = modellingLR(X_sampled_train, y_sampled_train, X_test, y_test)
+
+    # if model is 'Decision Tree Classifier':
+    #     model = modellingDTC (X_sampled_train, y_sampled_train, X_test, y_test)
+
+    # if model is "Random Forest Classifier":
+    #     model = modellingRFC (X_sampled_train, y_sampled_train, X_test, y_test)
+
+    # if model is "XGB Classifier":
+    #     model = modellingXGBC (X_sampled_train, y_sampled_train, X_test, y_test)
 
 
 
@@ -220,11 +262,13 @@ def train (X_sampled_train, y_sampled_train, X_test, y_test, model):
 
 
 if __name__ == '__main__':
-    try:
-        preprocess_and_train()
-        pred()
-    except:
-        import ipdb, traceback, sys
-        extype, value, tb = sys.exc_info()
-        traceback.print_exc()
-        ipdb.post_mortem(tb)
+
+    """train and save all four models, prediction only will be used for FE"""
+    # try:
+    #     preprocess_and_train()
+    #     pred()
+    # except:
+    #     import ipdb, traceback, sys
+    #     extype, value, tb = sys.exc_info()
+    #     traceback.print_exc()
+    #     ipdb.post_mortem(tb)
