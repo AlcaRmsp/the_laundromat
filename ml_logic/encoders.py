@@ -3,8 +3,6 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from ml_logic.data import split_data, separate_feature_target
-import os
-
 
 
 def transaction_type_encoder(df: pd.DataFrame) -> pd.DataFrame:
