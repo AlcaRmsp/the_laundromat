@@ -3,5 +3,7 @@ raw_data/
 .DS_Store
 .ipynb_checkpoints
 */__pycache__/
+Notebooks/
+*.png
 #
 #

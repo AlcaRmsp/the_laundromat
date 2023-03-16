@@ -8,6 +8,8 @@ from ml_logic.data import clean_data
 from ml_logic.data import separate_feature_target
 from ml_logic.data import split_data
 from ml_logic import params
+from ml_logic.encoders import rebalancing_SMOTE, rebalancing_ADASYN
+from ml_logic.model import resample
 
 # from taxifare.ml_logic.model import initialize_model, compile_model, train_model
 # from taxifare.ml_logic.preprocessor import preprocess_features
@@ -24,6 +26,10 @@ from ml_logic import params
 #     LOCAL_DATA_PATH
 # )
 
+
+def rebalance(df):
+    x_1, y_1 = rebalancing_SMOTE(df)
+    x_2, y_2 = resample(x_1, y_1)
 
 def preprocess_and_train(df):
     """
@@ -50,7 +56,7 @@ def preprocess_and_train(df):
     create_X_y = separate_feature_target (df)
     # $CODE_END
 
-    #Split dataset 
+    #Split dataset
 
 """START AGAIN HERE AFTER LUNCH"""
 
