@@ -75,6 +75,9 @@ def save_trained_model (model, model_name):
 
     return
 
+
+#define load pickle model
+
 def pred (X_test, y_test, model):
     """ This function will take user input and will use saved model from train function"""
     model = pickle.loads("file to pickle file in")
