@@ -1,17 +1,13 @@
-
-import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.svm import LinearSVC
 from sklearn.metrics import recall_score, accuracy_score, mean_absolute_error
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn import svm
-import os
+
 
 
 def new_x_train_y_train(data_new):
