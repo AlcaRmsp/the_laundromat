@@ -37,7 +37,7 @@ def preprocess(data_raw_path):
     df_resampled_SMOTE = rebalancing_SMOTE(X_train, y_train)
 
     #Taking a sample of the balanced dataset to train our models
-    df_processed = resample(df_resampled_SMOTE)
+    df_processed = resample(df_resampled_SMOTE, 100000)
 
     return df_processed
 
@@ -70,13 +70,13 @@ def train (X_sampled_train, y_sampled_train, model):
 
 
 def save_trained_model (model, model_name):
-    with open(f"{model_name}.pickle", "wb") as handle:
+    with open(f"trained_models/{model_name}.pickle", "wb") as handle:
         pickle.dump(model, handle)
 
-    return
 
-
-#define load pickle model
+def load_trained_model (model_name):
+    loaded_model = pickle.load(open(f'trained_models/{model_name}.pickle'))
+    return loaded_model
 
 def pred (X_test, y_test, model):
     """ This function will take user input and will use saved model from train function"""
@@ -100,15 +100,17 @@ def pred (X_test, y_test, model):
 if __name__ == '__main__':
 
     """train and save all four models, prediction only will be used for FE"""
-    try:
-        preprocess()
-        new_x_train_y_train()
-        train()
-        save_trained_model()
-        pred()
 
-    except:
-        import ipdb, traceback, sys
-        extype, value, tb = sys.exc_info()
-        traceback.print_exc()
-        ipdb.post_mortem(tb)
+    df_processed = preprocess(data_raw_path)
+    print(df_processed.head())
+    X_sampled_train, y_sampled_train = new_x_train_y_train(df_processed)
+    model_list = ['Logistic Regression',
+                    'Decision Tree Classifier',
+                    "Random Forest Classifier",
+                    "XGB Classifier"]
+    for model in model_list:
+        trained_model = train(X_sampled_train, y_sampled_train, model)
+        save_trained_model(trained_model, model)
+    # train()
+    # save_trained_model()
+    # pred()
