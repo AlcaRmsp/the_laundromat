@@ -37,9 +37,9 @@ def preprocess(data_raw_path):
     df_resampled_SMOTE = rebalancing_SMOTE(X_train, y_train)
 
     #Taking a sample of the balanced dataset to train our models
-    df_processed = resample(df_resampled_SMOTE)
+    df_processed = resample(df_resampled_SMOTE, 100000)
 
-    return df_processed
+    return df_processed, X_test, y_test
 
     #Create new X_processed and y_processed
 
@@ -70,29 +70,29 @@ def train (X_sampled_train, y_sampled_train, model):
 
 
 def save_trained_model (model, model_name):
-    with open(f"{model_name}.pickle", "wb") as handle:
+    with open(f"trained_models/{model_name}.pickle", "wb") as handle:
         pickle.dump(model, handle)
 
-    return
 
+def load_trained_model (model_name):
+    loaded_model = pickle.load(open(f'trained_models/{model_name}.pickle', 'rb'))
+    return loaded_model
 
-#define load pickle model
-
-def pred (X_test, y_test, model):
+def pred (X_test, y_test, model_name):
     """ This function will take user input and will use saved model from train function"""
-    model = pickle.loads("file to pickle file in")
+    loaded_model = load_trained_model(model_name)
 
-    if model == 'Logistic Regression':
-        prediction = predictingLR(X_test, y_test)
+    if model_name == 'Logistic Regression':
+        prediction = predictingLR(loaded_model, X_test, y_test)
 
-    if model == 'Decision Tree Classifier':
-        prediction = predictingDTC (X_test, y_test)
+    if model_name == 'Decision Tree Classifier':
+        prediction = predictingDTC (loaded_model, X_test, y_test)
 
-    if model == "Random Forest Classifier":
-        prediction = predictingRFC (X_test, y_test)
+    if model_name == "Random Forest Classifier":
+        prediction = predictingRFC (loaded_model, X_test, y_test)
 
-    if model == "XGB Classifier":
-        prediction = predictingXGBC (X_test, y_test)
+    if model_name == "XGB Classifier":
+        prediction = predictingXGBC (loaded_model, X_test, y_test)
 
     return prediction
 
@@ -100,15 +100,16 @@ def pred (X_test, y_test, model):
 if __name__ == '__main__':
 
     """train and save all four models, prediction only will be used for FE"""
-    try:
-        preprocess()
-        new_x_train_y_train()
-        train()
-        save_trained_model()
-        pred()
 
-    except:
-        import ipdb, traceback, sys
-        extype, value, tb = sys.exc_info()
-        traceback.print_exc()
-        ipdb.post_mortem(tb)
+#  TRAINING MODELS
+    df_processed, X_test, y_test = preprocess(data_raw_path)
+    print(df_processed.head())
+    X_sampled_train, y_sampled_train = new_x_train_y_train(df_processed)
+    model_list = ['Logistic Regression',
+                    'Decision Tree Classifier',
+                    "Random Forest Classifier",
+                    "XGB Classifier"]
+    for model in model_list:
+        trained_model = train(X_sampled_train, y_sampled_train, model)
+        save_trained_model(trained_model, model)
+        y_pred = pred(X_test, y_test, model)

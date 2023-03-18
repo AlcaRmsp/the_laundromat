@@ -7,7 +7,7 @@ from sklearn.metrics import recall_score, accuracy_score, mean_absolute_error
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+from sklearn.metrics import classification_report
 
 
 def new_x_train_y_train(data_new):
@@ -30,8 +30,9 @@ def predictingLR (model_LR, X_test, y_test):
     y_pred_LR = model_LR.predict(X_test)
 
     #Scores
-    recall_LR = recall_score(y_test, y_pred_LR)
-    accuracy_LR = accuracy_score(y_test, y_pred_LR)
+    print('Classification report:\n', classification_report(y_test, y_pred_LR))
+    with open('trained_models/Logistic Regression classification report.txt', 'w') as f:
+        f.write(classification_report(y_test, y_pred_LR))
 
     #Confusion matrix
     cm_LR = confusion_matrix(y_test, y_pred_LR)
@@ -41,7 +42,7 @@ def predictingLR (model_LR, X_test, y_test):
     sns.heatmap(confusion_matrix_LR, annot=True, fmt='d', cmap = 'PuBu', ax = ax)
     plt.savefig('Confusion matrix for LR model')
 
-    return y_pred_LR, recall_LR, accuracy_LR, confusion_matrix_LR
+    return y_pred_LR, confusion_matrix_LR
 
 def modellingDTC(X_sampled_train, y_sampled_train):
     #state the model
@@ -57,8 +58,10 @@ def predictingDTC (model_DTC, X_test, y_test):
     y_pred_DTC = model_DTC.predict(X_test)
 
     #Scores
-    recall_DTC = recall_score(y_test, y_pred_DTC)
-    accuracy_DTC = accuracy_score(y_test, y_pred_DTC)
+
+    print('Classification report:\n', classification_report(y_test, y_pred_DTC))
+    with open('trained_models/Decision Tree Classifier report.txt', 'w') as f:
+        f.write(classification_report(y_test, y_pred_DTC))
 
     #Confusion matrix
     cm_DTC = confusion_matrix(y_test, y_pred_DTC)
@@ -68,7 +71,7 @@ def predictingDTC (model_DTC, X_test, y_test):
     sns.heatmap(confusion_matrix_DTC, annot=True, fmt='d', cmap = 'PuBu', ax = ax)
     plt.savefig('Confusion matrix for DTC model')
 
-    return y_pred_DTC, recall_DTC, accuracy_DTC, confusion_matrix_DTC
+    return y_pred_DTC, confusion_matrix_DTC
 
 def modellingRFC(X_sampled_train, y_sampled_train):
     #state the model
@@ -86,8 +89,10 @@ def predictingRFC (model_RFC, X_test, y_test):
     y_pred_RFC = model_RFC.predict(X_test)
 
     #Scores
-    recall_RFC = recall_score(y_test, y_pred_RFC)
-    accuracy_RFC = accuracy_score(y_test, y_pred_RFC)
+
+    print('Classification report:\n', classification_report(y_test, y_pred_RFC))
+    with open('trained_models/Random Forest Classifier report.txt', 'w') as f:
+        f.write(classification_report(y_test, y_pred_RFC))
 
     #Confusion matrix
     cm_RFC = confusion_matrix(y_test, y_pred_RFC)
@@ -97,7 +102,7 @@ def predictingRFC (model_RFC, X_test, y_test):
     sns.heatmap(confusion_matrix_RFC, annot=True, fmt='d', cmap = 'PuBu', ax = ax)
     plt.savefig('Confusion matrix for RFC model')
 
-    return y_pred_RFC, recall_RFC, accuracy_RFC, confusion_matrix_RFC
+    return y_pred_RFC, confusion_matrix_RFC
 
 def modellingXGBC(X_sampled_train, y_sampled_train):
     #state the model
@@ -114,8 +119,11 @@ def predictingXGBC (model_XGBC, X_test, y_test):
     y_pred_XGBC = model_XGBC.predict(X_test)
 
     #Scores
-    recall_XGBC = recall_score(y_test, y_pred_XGBC)
-    accuracy_XGBC =accuracy_score(y_test, y_pred_XGBC)
+
+    print('Classification report:\n', classification_report(y_test, y_pred_XGBC))
+    with open('trained_models/XGB Classifier report.txt', 'w') as f:
+        f.write(classification_report(y_test, y_pred_XGBC))
+
 
     #confusion matrix
     cm_XGBC = confusion_matrix(y_test, y_pred_XGBC)
@@ -123,5 +131,6 @@ def predictingXGBC (model_XGBC, X_test, y_test):
                                  index=['Predict Positive:1', 'Predict Negative:0'])
     fig, ax = plt.subplots(figsize=(5,5))
     sns.heatmap(confusion_matrix_XGBC, annot=True, fmt='d', cmap = 'PuBu', ax = ax)
+    plt.savefig('Confusion matrix for XGBC model')
 
-    return y_pred_XGBC, recall_XGBC, accuracy_XGBC, confusion_matrix_XGBC
+    return y_pred_XGBC, confusion_matrix_XGBC
